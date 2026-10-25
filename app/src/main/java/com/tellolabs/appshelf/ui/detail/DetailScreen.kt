@@ -1,0 +1,72 @@
+package com.tellolabs.appshelf.ui.detail
+
+import android.os.Build
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.tellolabs.appshelf.model.*
+import com.tellolabs.appshelf.ui.AppIcon
+import com.tellolabs.appshelf.ui.DownloadActions
+import com.tellolabs.appshelf.ui.formatBytes
+
+@Composable
+fun DetailScreen(
+    app: CatalogApp?, downloads: List<DownloadItem>, onDownload: (AppRelease) -> Unit,
+    onInstall: (DownloadRecord) -> Unit, onCancel: (DownloadRecord) -> Unit,
+    onRetry: (DownloadRecord) -> Unit, onRepository: (String) -> Unit,
+) {
+    if (app == null) {
+        Text("Aplikasi tidak ditemukan dalam katalog. Kembali lalu refresh katalog.", Modifier.padding(24.dp))
+        return
+    }
+    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    AppIcon(app)
+                    Column(Modifier.weight(1f)) {
+                        Text(app.name, style = MaterialTheme.typography.headlineSmall)
+                        Text(app.packageName ?: "Package name belum tersedia", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                Text(app.description ?: "Deskripsi belum tersedia")
+                if (app.repositoryUrl.isHttpsUrl()) {
+                    OutlinedButton(onClick = { onRepository(requireNotNull(app.repositoryUrl)) }) { Text("Buka repository") }
+                }
+                Text("Riwayat rilis", style = MaterialTheme.typography.titleLarge)
+                if (app.releases.isEmpty()) Text("Belum ada rilis yang tersedia.")
+            }
+        }
+        itemsIndexed(app.releases) { index, release ->
+            OutlinedCard(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    if (index == 0) Text("Rilis terbaru", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                    Text(release.label, style = MaterialTheme.typography.titleMedium)
+                    release.tag?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+                    release.versionCode?.let { Text("Version code: $it") }
+                    release.releasedAt?.let { Text("Dirilis $it") }
+                    release.minSdk?.let { Text("Minimum Android API $it") }
+                    release.sizeBytes?.let { Text(formatBytes(it)) }
+                    if (release.changelog.isEmpty()) Text("Catatan rilis belum tersedia")
+                    else release.changelog.forEach { Text("• $it") }
+                    val compatible = release.minSdk == null || release.minSdk <= Build.VERSION.SDK_INT
+                    val validUrl = release.apkUrl.isHttpsUrl()
+                    if (!compatible) Text("Tidak kompatibel dengan versi Android perangkat ini.", color = MaterialTheme.colorScheme.error)
+                    val item = downloads.firstOrNull { it.record.appId == app.id && it.record.url == release.apkUrl }
+                    if (item != null) {
+                        DownloadActions(item, onInstall = { onInstall(item.record) },
+                            onCancel = { onCancel(item.record) }, onRetry = { if (compatible && validUrl) onRetry(item.record) })
+                    } else {
+                        Button(onClick = { onDownload(release) }, enabled = compatible && validUrl) { Text("Download APK") }
+                    }
+                    if (!validUrl) Text("URL APK belum tersedia atau tidak valid.", style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+        item { Text("Instalasi dikonfirmasi melalui installer Android. Jika APK ditolak, periksa kompatibilitas dan signing aplikasi.", style = MaterialTheme.typography.bodySmall) }
+    }
+}

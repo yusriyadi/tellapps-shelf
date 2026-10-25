@@ -1,0 +1,65 @@
+# TellApps Shelf — Android
+
+Aplikasi katalog Android sederhana untuk app Yusriyadi. Satu modul dengan **Kotlin, Jetpack Compose Material 3, MVVM, dan repository layer**; dependency injection manual lewat `AppContainer`.
+
+- Application ID: `com.tellolabs.appshelf`
+- Minimum Android 8.0 / API 26; compile/target API 36
+- Versi awal: `0.1.0` (version code 1)
+- Sumber: https://yusriyadi.github.io/json/store-list.json
+
+## Fitur
+
+- Katalog, pencarian lokal, detail, repository, dan riwayat rilis sesuai urutan JSON.
+- Fallback metadata/icon kosong, refresh manual, cache JSON atomik, waktu sinkronisasi, dan katalog offline terakhir.
+- DownloadManager: antrean, progres, pembatalan, coba lagi, status tersimpan di DataStore, dan pemulihan status saat aplikasi dibuka kembali.
+- File APK disimpan di direktori external app-specific dengan nama UUID. Tidak membutuhkan izin storage luas.
+- Install melalui FileProvider dan installer Android, setelah pengguna memberikan izin sumber instalasi. Setelah kembali dari pengaturan, ketuk Install APK lagi. Membatalkan installer tidak menghapus APK atau mengubahnya menjadi status terpasang.
+- Unduhan siap install dapat dihapus. Checksum SHA-256 diperiksa bila tersedia dalam katalog; checksum berbeda memblokir install.
+- Tema sistem/terang/gelap, pembersihan cache katalog, grid katalog pada layar lebar, dan konten detail dengan lebar terbatas.
+
+## Menjalankan
+
+Buka folder ini di Android Studio. Gunakan JDK 17 dan SDK platform Android 36. Atur lokasi SDK di `local.properties` (tidak dikomit).
+
+```sh
+./gradlew :app:assembleDebug
+android run --apks=app/build/outputs/apk/debug/app-debug.apk
+```
+
+APK debug: `app/build/outputs/apk/debug/app-debug.apk`.
+
+## Struktur
+
+```text
+app/src/main/java/com/tellolabs/appshelf/
+  AppShelfApplication.kt   # application container
+  MainActivity.kt          # lifecycle, permission, installer, external intents
+  model/                   # katalog, rilis, snapshot metadata unduhan
+  data/catalog/            # OkHttp, serialization, validasi, cache atomik
+  data/download/           # DownloadManager, persistensi, checksum
+  data/settings/           # DataStore dan tema
+  platform/install/        # URI FileProvider dan installer
+  ui/                      # ViewModel, Compose screens, navigation, theme
+```
+
+`AppViewModel` mengekspos StateFlow; Compose mengoleksinya mengikuti lifecycle. Polling DownloadManager hanya aktif saat Activity minimal STARTED. Transfer background ditangani sistem, tanpa service atau WorkManager sendiri.
+
+## Pemeriksaan manual sebelum rilis
+
+1. Buka online, cari aplikasi, buka detail; coba pencarian tanpa hasil dan Reset.
+2. Buka ulang offline setelah sinkronisasi; refresh gagal harus mempertahankan katalog terakhir.
+3. Download APK, batalkan/coba lagi, tutup aplikasi dan buka kembali; status harus dipulihkan.
+4. Setelah selesai, coba izin sumber install ditolak/diizinkan, kembali dari installer, lalu hapus APK.
+5. Coba URL gagal, file hilang, tema gelap, rotasi, font besar, dan layar tablet.
+
+Build debug merupakan validasi kompilasi; alur download/install tetap memerlukan smoke test pada perangkat. Tidak ada unit test atau instrumentation test yang dijalankan pada implementasi awal ini.
+
+## Batasan dan rilis
+
+- APK tunggal/universal. Belum ada split APK/AAB, status terpasang, update otomatis, login, atau notifikasi rilis.
+- Berbagi URL detail website ditunda sampai base URL deployment ditentukan.
+- Release signing belum dikonfigurasi. Sebelum distribusi publik, buat keystore milik pemilik proyek melalui **Generate Signed Bundle / APK** di Android Studio, simpan dengan aman, dan gunakan keystore yang sama untuk pembaruan berikutnya. Jangan gunakan debug key sebagai identitas rilis publik.
+- File APK milik TellApps Shelf dapat ikut hilang saat TellApps Shelf di-uninstall. Cache dibersihkan terpisah dari file unduhan.
+- Perbaikan arsitektur lebih lanjut dan pengujian menyeluruh dapat dilakukan pada iterasi berikutnya.
+
+Lihat [RANCANGAN.md](RANCANGAN.md) untuk rancangan lengkap.

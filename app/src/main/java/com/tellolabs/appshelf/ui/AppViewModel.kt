@@ -1,0 +1,96 @@
+package com.tellolabs.appshelf.ui
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.tellolabs.appshelf.AppContainer
+import com.tellolabs.appshelf.data.catalog.CatalogSnapshot
+import com.tellolabs.appshelf.data.settings.ThemeMode
+import com.tellolabs.appshelf.model.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+
+data class CatalogUiState(
+    val snapshot: CatalogSnapshot? = null,
+    val loading: Boolean = true,
+    val fromCache: Boolean = false,
+    val error: String? = null,
+)
+
+class AppViewModel(private val container: AppContainer) : ViewModel() {
+    private val mutableCatalog = MutableStateFlow(CatalogUiState())
+    val catalog = mutableCatalog.asStateFlow()
+    val downloads = container.downloads.items
+    val theme = container.settings.theme.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ThemeMode.SYSTEM)
+    private val mutableMessage = MutableStateFlow<String?>(null)
+    val message = mutableMessage.asStateFlow()
+    private var refreshing = false
+
+    init {
+        viewModelScope.launch {
+            container.catalog.cached()?.let {
+                mutableCatalog.value = CatalogUiState(it, loading = false, fromCache = true)
+            }
+            refresh()
+        }
+    }
+
+    fun refresh() {
+        if (refreshing) return
+        refreshing = true
+        viewModelScope.launch {
+            mutableCatalog.update { it.copy(loading = true, error = null) }
+            try {
+                val snapshot = container.catalog.refresh()
+                mutableCatalog.value = CatalogUiState(snapshot, loading = false)
+            } catch (e: CancellationException) { throw e
+            } catch (e: Exception) {
+                mutableCatalog.update {
+                    it.copy(loading = false, fromCache = it.snapshot != null,
+                        error = "Katalog gagal dimuat. ${e.message ?: "Periksa koneksi internet."}")
+                }
+            } finally { refreshing = false }
+        }
+    }
+
+    // Called within repeatOnLifecycle(STARTED); no polling while the app is in the background.
+    suspend fun observeDownloads() {
+        while (true) {
+            try { container.downloads.refresh()
+            } catch (e: CancellationException) { throw e
+            } catch (e: Exception) { mutableMessage.value = "Status unduhan gagal dibaca. ${e.message.orEmpty()}" }
+            delay(if (downloads.value.any { it.active }) 1_000 else 5_000)
+        }
+    }
+
+    fun download(app: CatalogApp, release: AppRelease) = action { container.downloads.enqueue(app, release) }
+    fun retry(record: DownloadRecord) = action { container.downloads.retry(record) }
+    fun cancel(record: DownloadRecord) = action { container.downloads.cancel(record) }
+    fun delete(record: DownloadRecord) = action { container.downloads.delete(record) }
+    fun setTheme(mode: ThemeMode) = action { container.settings.setTheme(mode) }
+    fun clearCache() = action {
+        container.catalog.clearCache()
+        mutableCatalog.update { it.copy(snapshot = it.snapshot?.copy(syncedAt = 0), fromCache = false) }
+        mutableMessage.value = "Cache katalog dihapus. Data di layar tetap tersedia sampai aplikasi ditutup."
+    }
+    fun showMessage(message: String) { mutableMessage.value = message }
+    fun consumeMessage() { mutableMessage.value = null }
+    suspend fun installFile(record: DownloadRecord) = container.downloads.installFile(record)
+
+    private fun action(block: suspend () -> Unit) {
+        viewModelScope.launch {
+            try { block()
+            } catch (e: CancellationException) { throw e
+            } catch (e: Exception) { mutableMessage.value = e.message ?: "Terjadi kesalahan. Silakan coba lagi." }
+        }
+    }
+
+    companion object {
+        fun factory(container: AppContainer): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T = AppViewModel(container) as T
+        }
+    }
+}
