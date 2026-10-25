@@ -4,6 +4,11 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+val releaseSigningProperties = java.util.Properties().apply {
+    val signingFile = rootProject.file("keystore.properties")
+    if (signingFile.isFile) signingFile.inputStream().use { load(it) }
+}
+
 android {
     namespace = "com.tellolabs.appshelf"
     compileSdk = 36
@@ -19,8 +24,17 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures { compose = true }
+    signingConfigs {
+        create("release") {
+            releaseSigningProperties.getProperty("storeFile")?.let { storeFile = rootProject.file(it) }
+            storePassword = releaseSigningProperties.getProperty("storePassword")
+            keyAlias = releaseSigningProperties.getProperty("keyAlias")
+            keyPassword = releaseSigningProperties.getProperty("keyPassword")
+        }
+    }
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }

@@ -190,7 +190,7 @@ Validasi terarah saat implementasi:
 - Install: sumber belum diizinkan/ditolak, kembali dari pengaturan, installer dibatalkan, APK rusak, file dihapus, dan update dengan signing berbeda.
 - Layout: perangkat minimum yang didukung, Android versi target, Android 11+ untuk visibility saat fitur itu ditambahkan, tablet, rotasi dan font besar.
 
-Implementasi awal menggunakan nama TellApps Shelf, application ID `com.tellolabs.appshelf`, dan cakupan download-install MVP. Project Gradle sudah tersedia. Signing rilis publik dan pengujian alur pada perangkat tetap menjadi pekerjaan sebelum distribusi.
+Implementasi awal menggunakan nama TellApps Shelf, application ID `com.tellolabs.appshelf`, dan cakupan download-install MVP. Project Gradle sudah tersedia. Signing rilis dikonfigurasi melalui keystore lokal di luar Git; fitur dan instalasi sudah diperiksa manual pada perangkat. Pengujian skenario lanjutan tetap dapat dilakukan pada iterasi berikutnya.
 
 ## 10. Referensi teknis
 

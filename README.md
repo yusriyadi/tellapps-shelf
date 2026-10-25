@@ -52,14 +52,32 @@ app/src/main/java/com/tellolabs/appshelf/
 4. Setelah selesai, coba izin sumber install ditolak/diizinkan, kembali dari installer, lalu hapus APK.
 5. Coba URL gagal, file hilang, tema gelap, rotasi, font besar, dan layar tablet.
 
-Build debug merupakan validasi kompilasi; alur download/install tetap memerlukan smoke test pada perangkat. Tidak ada unit test atau instrumentation test yang dijalankan pada implementasi awal ini.
+Build debug berhasil dan fitur serta instalasi sudah diperiksa manual oleh pemilik proyek pada perangkat. Tidak ada unit test atau instrumentation test yang dijalankan pada implementasi awal ini.
 
 ## Batasan dan rilis
 
 - APK tunggal/universal. Belum ada split APK/AAB, status terpasang, update otomatis, login, atau notifikasi rilis.
 - Berbagi URL detail website ditunda sampai base URL deployment ditentukan.
-- Release signing belum dikonfigurasi. Sebelum distribusi publik, buat keystore milik pemilik proyek melalui **Generate Signed Bundle / APK** di Android Studio, simpan dengan aman, dan gunakan keystore yang sama untuk pembaruan berikutnya. Jangan gunakan debug key sebagai identitas rilis publik.
+- Release signing memakai keystore khusus rilis, terpisah dari debug key. Simpan cadangan keystore dan kredensial dengan aman; gunakan key yang sama untuk pembaruan berikutnya.
+- APK release tidak dapat menggantikan instalasi debug dengan package yang sama karena signing berbeda. Untuk beralih dari debug, uninstall build debug secara manual lebih dahulu; data lokal dan unduhan app-specific ikut dapat terhapus.
 - File APK milik TellApps Shelf dapat ikut hilang saat TellApps Shelf di-uninstall. Cache dibersihkan terpisah dari file unduhan.
 - Perbaikan arsitektur lebih lanjut dan pengujian menyeluruh dapat dilakukan pada iterasi berikutnya.
 
 Lihat [RANCANGAN.md](RANCANGAN.md) untuk rancangan lengkap.
+
+## Build release
+
+Keystore dan `keystore.properties` disimpan lokal dan diabaikan Git. Untuk checkout baru, pulihkan keduanya dari cadangan pemilik proyek. Contoh struktur konfigurasi (ganti placeholder dengan kredensial lokal):
+
+```properties
+storeFile=.signing/tellapps-shelf-release.jks
+storePassword=<password lokal>
+keyAlias=tellapps-shelf
+keyPassword=<password lokal>
+```
+
+```sh
+./gradlew :app:assembleRelease
+```
+
+APK bertanda tangan: `app/build/outputs/apk/release/app-release.apk`. Jangan mengunggah keystore atau `keystore.properties` ke repository maupun GitHub Release.
