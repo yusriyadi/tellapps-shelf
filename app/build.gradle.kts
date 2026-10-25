@@ -1,10 +1,12 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.serialization)
 }
 
-val releaseSigningProperties = java.util.Properties().apply {
+val releaseSigningProperties = Properties().apply {
     val signingFile = rootProject.file("keystore.properties")
     if (signingFile.isFile) signingFile.inputStream().use { load(it) }
 }
