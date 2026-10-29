@@ -18,7 +18,7 @@ import com.tellolabs.appshelf.ui.formatBytes
 fun DetailScreen(
     app: CatalogApp?, installation: AppInstallation, downloads: List<DownloadItem>, onDownload: (AppRelease) -> Unit,
     onInstall: (DownloadRecord) -> Unit, onCancel: (DownloadRecord) -> Unit,
-    onRetry: (DownloadRecord) -> Unit, onRepository: (String) -> Unit,
+    onRetry: (DownloadRecord) -> Unit, onRepository: (String) -> Unit, onOpenApp: (String) -> Unit,
 ) {
     if (app == null) {
         Text("Aplikasi tidak ditemukan dalam katalog. Kembali lalu refresh katalog.", Modifier.padding(24.dp))
@@ -38,6 +38,9 @@ fun DetailScreen(
                 installation.versionCode?.let { code ->
                     Text("Versi perangkat: ${installation.versionName?.takeIf { it.isNotBlank() } ?: "Tanpa nama versi"} (code $code)",
                         style = MaterialTheme.typography.bodySmall)
+                }
+                app.packageName?.takeIf { it.isNotBlank() && installation.canOpen }?.let { packageName ->
+                    FilledTonalButton(onClick = { onOpenApp(packageName) }) { Text("Buka aplikasi") }
                 }
                 Text(app.description ?: "Deskripsi belum tersedia")
                 if (app.repositoryUrl.isHttpsUrl()) {

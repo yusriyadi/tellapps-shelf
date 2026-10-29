@@ -21,7 +21,7 @@ import com.tellolabs.appshelf.ui.settings.SettingsScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppNavigation(viewModel: AppViewModel, onInstall: (DownloadRecord) -> Unit, onOpenUrl: (String) -> Unit) {
+fun AppNavigation(viewModel: AppViewModel, onInstall: (DownloadRecord) -> Unit, onOpenUrl: (String) -> Unit, onOpenApp: (String) -> Unit) {
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route ?: "catalog"
@@ -70,7 +70,7 @@ fun AppNavigation(viewModel: AppViewModel, onInstall: (DownloadRecord) -> Unit, 
                 composable("detail/{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })) { detail ->
                     val app = catalog.snapshot?.catalog?.apps?.firstOrNull { it.id == detail.arguments?.getString("id") }
                     DetailScreen(app, installations[app?.id] ?: AppInstallation(), downloads, onDownload = { release -> app?.let { viewModel.download(it, release) } },
-                        onInstall = onInstall, onCancel = viewModel::cancel, onRetry = viewModel::retry, onRepository = onOpenUrl)
+                        onInstall = onInstall, onCancel = viewModel::cancel, onRetry = viewModel::retry, onRepository = onOpenUrl, onOpenApp = onOpenApp)
                 }
             }
         }

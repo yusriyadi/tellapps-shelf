@@ -74,6 +74,18 @@ class MainActivity : ComponentActivity() {
                             } finally { installing = false }
                         }
                     }
+                }, onOpenApp = { packageName ->
+                    // Resolve again at tap time; the app may have been removed or
+                    // its launcher disabled since installation status was read.
+                    try {
+                        val intent = packageManager.getLaunchIntentForPackage(packageName)
+                        if (intent != null) startActivity(intent)
+                        else vm.showMessage("Aplikasi tidak tersedia atau tidak memiliki layar yang bisa dibuka.")
+                    } catch (_: ActivityNotFoundException) {
+                        vm.showMessage("Aplikasi sudah tidak tersedia untuk dibuka.")
+                    } catch (_: SecurityException) {
+                        vm.showMessage("Android tidak mengizinkan aplikasi ini dibuka.")
+                    }
                 }, onOpenUrl = { url ->
                     if (url.isHttpsUrl()) {
                         try { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))

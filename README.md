@@ -10,6 +10,7 @@ Aplikasi katalog Android sederhana untuk app Yusriyadi. Satu modul dengan **Kotl
 ## Fitur
 
 - Katalog, pencarian lokal, detail, repository, dan riwayat rilis sesuai urutan JSON.
+- Tombol Buka aplikasi pada detail untuk aplikasi terpasang yang memiliki launcher activity yang dapat diakses.
 - Status belum terpasang, terpasang, update tersedia, versi perangkat lebih baru, atau tidak diketahui pada katalog dan detail. Perbandingan memakai version code, bukan nama versi.
 - Fallback metadata/icon kosong, refresh manual, cache JSON atomik, waktu sinkronisasi, dan katalog offline terakhir.
 - DownloadManager: antrean, progres, pembatalan, coba lagi, status tersimpan di DataStore, dan pemulihan status saat aplikasi dibuka kembali.
@@ -92,3 +93,5 @@ Rilis pertama dalam array `releases` dianggap terbaru. Version code lebih tinggi
 Visibilitas paket Android 11+ dibatasi pada LocalGuard (`com.tellolabs.localguard`), AppFin (`com.tellolabs.appfin`), dan Tellauncher (`id.tellolabs.launcher`) melalui `<queries>`. Package aplikasi sendiri otomatis terlihat. Untuk app katalog baru, tambahkan package di manifest **dan** `InstallationRepository.queryablePackages`. Jika sebuah package tidak ditemukan dan visibilitasnya belum dijamin, status tetap tidak diketahui. Tidak menggunakan izin `QUERY_ALL_PACKAGES`.
 
 Download tetap tersedia untuk mengambil ulang APK maupun rilis lama. Hanya rilis terbaru yang lebih tinggi dari versi terpasang diberi label tombol Download update; riwayat rilis tidak dipromosikan sebagai update. Status instalasi tidak mengubah status file di Unduhan. Update tetap memerlukan signing yang cocok dan konfirmasi installer Android.
+
+Tombol **Buka aplikasi** muncul di detail bila PackageManager menyediakan launch intent. Saat tombol diketuk, Activity mencari intent terbaru dan membuka aplikasi tersebut. Jika app telah dihapus atau aksesnya ditolak, pengguna mendapat pesan dan Shelf tetap terbuka. Aplikasi tanpa launcher activity tidak mendapat tombol Buka; pemeriksaan ini tidak bergantung pada ketersediaan version code katalog.

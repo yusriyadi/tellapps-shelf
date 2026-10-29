@@ -47,6 +47,9 @@ class InstallationRepository(private val context: Context) {
                 status = compareInstalledVersion(installedCode, app.releases.firstOrNull()?.versionCode),
                 versionName = info.versionName,
                 versionCode = installedCode,
+                canOpen = try {
+                    manager.getLaunchIntentForPackage(packageName) != null
+                } catch (_: RuntimeException) { false },
             )
         } catch (_: PackageManager.NameNotFoundException) {
             val absenceIsReliable = Build.VERSION.SDK_INT < 30 || packageName == context.packageName || packageName in queryablePackages

@@ -12,6 +12,7 @@ data class AppInstallation(
     val status: InstallationStatus = InstallationStatus.UNKNOWN,
     val versionName: String? = null,
     val versionCode: Long? = null,
+    val canOpen: Boolean = false,
 )
 
 fun compareInstalledVersion(installed: Long, available: Long?): InstallationStatus = when {
