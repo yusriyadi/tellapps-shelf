@@ -6,8 +6,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.tellolabs.appshelf.R
 import com.tellolabs.appshelf.model.CatalogApp
 import com.tellolabs.appshelf.model.AppInstallation
 import com.tellolabs.appshelf.ui.InstallationLabel
@@ -37,7 +39,9 @@ fun CatalogScreen(state: CatalogUiState, installations: Map<String, AppInstallat
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text("${filtered.size} aplikasi", modifier = Modifier.weight(1f).padding(top = 14.dp))
-                    TextButton(onClick = onRefresh, enabled = !state.loading) { Text("Refresh") }
+                    IconButton(onClick = onRefresh, enabled = !state.loading) {
+                        Icon(painterResource(R.drawable.ic_refresh), contentDescription = "Refresh katalog")
+                    }
                 }
                 state.snapshot?.let {
                     if (it.syncedAt > 0) {

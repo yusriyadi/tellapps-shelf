@@ -6,11 +6,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
+import com.tellolabs.appshelf.R
 import com.tellolabs.appshelf.model.DownloadRecord
 import com.tellolabs.appshelf.model.AppInstallation
 import com.tellolabs.appshelf.ui.AppViewModel
@@ -42,17 +44,29 @@ fun AppNavigation(viewModel: AppViewModel, onInstall: (DownloadRecord) -> Unit, 
     Scaffold(
         topBar = {
             TopAppBar(title = { Text(when { route == "settings" -> "Pengaturan"; !main -> "Detail aplikasi"; else -> "TellApps Shelf" }) },
-                navigationIcon = { if (!main) TextButton(onClick = { nav.popBackStack() }) { Text("Kembali") } },
-                actions = { if (main) TextButton(onClick = { nav.navigate("settings") { launchSingleTop = true } }) { Text("Pengaturan") } })
+                navigationIcon = {
+                    if (!main) IconButton(onClick = { nav.popBackStack() }) {
+                        Icon(painterResource(R.drawable.ic_arrow_back), contentDescription = "Kembali")
+                    }
+                },
+                actions = {
+                    if (main) IconButton(onClick = { nav.navigate("settings") { launchSingleTop = true } }) {
+                        Icon(painterResource(R.drawable.ic_settings), contentDescription = "Pengaturan")
+                    }
+                })
         },
         bottomBar = {
             if (main) NavigationBar {
                 NavigationBarItem(selected = route == "catalog", label = { Text("Katalog") },
-                    icon = { Text("▤") }, onClick = {
+                    icon = {
+                        Icon(painterResource(R.drawable.ic_apps), contentDescription = null, modifier = Modifier.size(24.dp))
+                    }, onClick = {
                         nav.navigate("catalog") { popUpTo("catalog") { saveState = true }; launchSingleTop = true; restoreState = true }
                     })
                 NavigationBarItem(selected = route == "downloads", label = { Text("Unduhan") },
-                    icon = { Text("↓") }, onClick = {
+                    icon = {
+                        Icon(painterResource(R.drawable.ic_download), contentDescription = null, modifier = Modifier.size(24.dp))
+                    }, onClick = {
                         nav.navigate("downloads") { popUpTo("catalog") { saveState = true }; launchSingleTop = true; restoreState = true }
                     })
             }
