@@ -4,7 +4,7 @@ Aplikasi katalog Android sederhana untuk app Yusriyadi. Satu modul dengan **Kotl
 
 - Application ID: `com.tellolabs.appshelf`
 - Minimum Android 8.0 / API 26; compile/target API 36
-- Versi awal: `0.1.0` (version code 1)
+- Versi saat ini: `0.2.0` (version code 2)
 - Sumber: https://yusriyadi.github.io/json/store-list.json
 
 ## Fitur
