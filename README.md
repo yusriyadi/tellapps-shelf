@@ -10,6 +10,7 @@ Aplikasi katalog Android sederhana untuk app Yusriyadi. Satu modul dengan **Kotl
 ## Fitur
 
 - Katalog, pencarian lokal, detail, repository, dan riwayat rilis sesuai urutan JSON.
+- Tanggal rilis ditampilkan lebih mudah dibaca, ukuran APK menggunakan metadata atau informasi unduhan, dan changelog terbaru diberi penekanan.
 - Cek update TellApps Shelf dari Pengaturan berdasarkan package name dan version code; buka detail rilis untuk download/install melalui alur yang sudah ada. Versi terpasang memakai konfigurasi build, bukan teks versi manual.
 - Tombol Buka aplikasi pada detail untuk aplikasi terpasang yang memiliki launcher activity yang dapat diakses.
 - Status belum terpasang, terpasang, update tersedia, versi perangkat lebih baru, atau tidak diketahui pada katalog dan detail. Perbandingan memakai version code, bukan nama versi.

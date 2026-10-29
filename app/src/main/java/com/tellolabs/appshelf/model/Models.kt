@@ -61,6 +61,7 @@ data class DownloadItem(
     val downloadedBytes: Long = 0,
     val totalBytes: Long = -1,
     val message: String? = null,
+    val fileSizeBytes: Long? = null,
 ) {
     val active: Boolean get() = status in setOf(DownloadStatus.QUEUED, DownloadStatus.RUNNING, DownloadStatus.PAUSED, DownloadStatus.VERIFYING)
     val progress: Float? get() = if (totalBytes > 0) (downloadedBytes.toFloat() / totalBytes).coerceIn(0f, 1f) else null

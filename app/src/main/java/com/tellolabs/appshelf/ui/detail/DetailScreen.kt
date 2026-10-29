@@ -13,6 +13,7 @@ import com.tellolabs.appshelf.ui.AppIcon
 import com.tellolabs.appshelf.ui.InstallationLabel
 import com.tellolabs.appshelf.ui.DownloadActions
 import com.tellolabs.appshelf.ui.formatBytes
+import com.tellolabs.appshelf.ui.formatReleaseDate
 
 @Composable
 fun DetailScreen(
@@ -51,21 +52,26 @@ fun DetailScreen(
             }
         }
         itemsIndexed(app.releases) { index, release ->
-            OutlinedCard(Modifier.fillMaxWidth()) {
+            OutlinedCard(Modifier.fillMaxWidth(), colors = CardDefaults.outlinedCardColors(
+                containerColor = if (index == 0) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                else MaterialTheme.colorScheme.surface,
+            )) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     if (index == 0) Text("Rilis terbaru", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                     Text(release.label, style = MaterialTheme.typography.titleMedium)
                     release.tag?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
                     release.versionCode?.let { Text("Version code: $it") }
-                    release.releasedAt?.let { Text("Dirilis $it") }
+                    formatReleaseDate(release.releasedAt)?.let { Text("Dirilis $it") }
                     release.minSdk?.let { Text("Minimum Android API $it") }
-                    release.sizeBytes?.let { Text(formatBytes(it)) }
+                    val item = downloads.firstOrNull { it.record.appId == app.id && it.record.url == release.apkUrl }
+                    val size = item?.fileSizeBytes ?: item?.totalBytes?.takeIf { it > 0 } ?: release.sizeBytes?.takeIf { it >= 0 }
+                    Text(size?.let { "Ukuran APK: ${formatBytes(it)}" } ?: "Ukuran APK belum tersedia", style = MaterialTheme.typography.bodySmall)
+                    Text(if (index == 0) "Yang baru" else "Catatan rilis", style = MaterialTheme.typography.titleSmall)
                     if (release.changelog.isEmpty()) Text("Catatan rilis belum tersedia")
                     else release.changelog.forEach { Text("• $it") }
                     val compatible = release.minSdk == null || release.minSdk <= Build.VERSION.SDK_INT
                     val validUrl = release.apkUrl.isHttpsUrl()
                     if (!compatible) Text("Tidak kompatibel dengan versi Android perangkat ini.", color = MaterialTheme.colorScheme.error)
-                    val item = downloads.firstOrNull { it.record.appId == app.id && it.record.url == release.apkUrl }
                     if (item != null) {
                         DownloadActions(item, onInstall = { onInstall(item.record) },
                             onCancel = { onCancel(item.record) }, onRetry = { if (compatible && validUrl) onRetry(item.record) })

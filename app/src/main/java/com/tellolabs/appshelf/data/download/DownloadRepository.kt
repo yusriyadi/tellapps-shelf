@@ -170,7 +170,8 @@ class DownloadRepository(
                 DownloadStatus.MISSING -> "File APK sudah tidak tersedia. Silakan unduh ulang."
                 else -> null
             }
-            return DownloadItem(record, status, downloaded, total, message)
+            return DownloadItem(record, status, downloaded, total, message,
+                fileSizeBytes = if (status in setOf(DownloadStatus.READY, DownloadStatus.INVALID)) file(record).length() else null)
         }
         return DownloadItem(record, DownloadStatus.MISSING)
     }

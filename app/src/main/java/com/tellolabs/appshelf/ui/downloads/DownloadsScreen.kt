@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tellolabs.appshelf.model.*
 import com.tellolabs.appshelf.ui.DownloadActions
+import com.tellolabs.appshelf.ui.formatBytes
 
 @Composable
 fun DownloadsScreen(
@@ -27,6 +28,7 @@ fun DownloadsScreen(
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(item.record.appName, style = MaterialTheme.typography.titleMedium)
                     Text(item.record.versionLabel)
+                    item.fileSizeBytes?.let { Text("Ukuran APK: ${formatBytes(it)}", style = MaterialTheme.typography.bodySmall) }
                     DownloadActions(item, onInstall = { onInstall(item.record) }, onCancel = { onCancel(item.record) },
                         onRetry = { onRetry(item.record) }, onDelete = { deleting = item.record })
                 }
