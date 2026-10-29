@@ -10,12 +10,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tellolabs.appshelf.model.*
 import com.tellolabs.appshelf.ui.AppIcon
+import com.tellolabs.appshelf.ui.InstallationLabel
 import com.tellolabs.appshelf.ui.DownloadActions
 import com.tellolabs.appshelf.ui.formatBytes
 
 @Composable
 fun DetailScreen(
-    app: CatalogApp?, downloads: List<DownloadItem>, onDownload: (AppRelease) -> Unit,
+    app: CatalogApp?, installation: AppInstallation, downloads: List<DownloadItem>, onDownload: (AppRelease) -> Unit,
     onInstall: (DownloadRecord) -> Unit, onCancel: (DownloadRecord) -> Unit,
     onRetry: (DownloadRecord) -> Unit, onRepository: (String) -> Unit,
 ) {
@@ -32,6 +33,11 @@ fun DetailScreen(
                         Text(app.name, style = MaterialTheme.typography.headlineSmall)
                         Text(app.packageName ?: "Package name belum tersedia", style = MaterialTheme.typography.bodySmall)
                     }
+                }
+                InstallationLabel(installation)
+                installation.versionCode?.let { code ->
+                    Text("Versi perangkat: ${installation.versionName?.takeIf { it.isNotBlank() } ?: "Tanpa nama versi"} (code $code)",
+                        style = MaterialTheme.typography.bodySmall)
                 }
                 Text(app.description ?: "Deskripsi belum tersedia")
                 if (app.repositoryUrl.isHttpsUrl()) {
@@ -61,7 +67,9 @@ fun DetailScreen(
                         DownloadActions(item, onInstall = { onInstall(item.record) },
                             onCancel = { onCancel(item.record) }, onRetry = { if (compatible && validUrl) onRetry(item.record) })
                     } else {
-                        Button(onClick = { onDownload(release) }, enabled = compatible && validUrl) { Text("Download APK") }
+                        Button(onClick = { onDownload(release) }, enabled = compatible && validUrl) {
+                            Text(if (index == 0 && installation.status == InstallationStatus.UPDATE_AVAILABLE) "Download update" else "Download APK")
+                        }
                     }
                     if (!validUrl) Text("URL APK belum tersedia atau tidak valid.", style = MaterialTheme.typography.bodySmall)
                 }

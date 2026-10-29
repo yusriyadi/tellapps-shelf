@@ -12,6 +12,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.tellolabs.appshelf.model.DownloadRecord
+import com.tellolabs.appshelf.model.AppInstallation
 import com.tellolabs.appshelf.ui.AppViewModel
 import com.tellolabs.appshelf.ui.catalog.CatalogScreen
 import com.tellolabs.appshelf.ui.detail.DetailScreen
@@ -26,6 +27,7 @@ fun AppNavigation(viewModel: AppViewModel, onInstall: (DownloadRecord) -> Unit, 
     val route = entry?.destination?.route ?: "catalog"
     val main = route == "catalog" || route == "downloads"
     val catalog by viewModel.catalog.collectAsStateWithLifecycle()
+    val installations by viewModel.installations.collectAsStateWithLifecycle()
     val downloads by viewModel.downloads.collectAsStateWithLifecycle()
     val theme by viewModel.theme.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
@@ -52,6 +54,7 @@ fun AppNavigation(viewModel: AppViewModel, onInstall: (DownloadRecord) -> Unit, 
                     icon = { Text("↓") }, onClick = {
                         nav.navigate("downloads") { popUpTo("catalog") { saveState = true }; launchSingleTop = true; restoreState = true }
                     })
+                composable("settings") { SettingsScreen(theme, viewModel::setTheme, viewModel::clearCache) }
             }
         },
         snackbarHost = { SnackbarHost(snackbars) },
@@ -59,17 +62,16 @@ fun AppNavigation(viewModel: AppViewModel, onInstall: (DownloadRecord) -> Unit, 
         Box(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding), contentAlignment = Alignment.TopCenter) {
             NavHost(navController = nav, startDestination = "catalog", modifier = Modifier.widthIn(max = if (main && route == "catalog") 1200.dp else 760.dp).fillMaxSize()) {
                 composable("catalog") {
-                    CatalogScreen(catalog, viewModel::refresh) { nav.navigate("detail/${Uri.encode(it)}") }
+                    CatalogScreen(catalog, installations, viewModel::refresh) { nav.navigate("detail/${Uri.encode(it)}") }
                 }
                 composable("downloads") {
                     DownloadsScreen(downloads, onInstall, viewModel::cancel, viewModel::retry, viewModel::delete)
                 }
                 composable("detail/{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })) { detail ->
                     val app = catalog.snapshot?.catalog?.apps?.firstOrNull { it.id == detail.arguments?.getString("id") }
-                    DetailScreen(app, downloads, onDownload = { release -> app?.let { viewModel.download(it, release) } },
+                    DetailScreen(app, installations[app?.id] ?: AppInstallation(), downloads, onDownload = { release -> app?.let { viewModel.download(it, release) } },
                         onInstall = onInstall, onCancel = viewModel::cancel, onRetry = viewModel::retry, onRepository = onOpenUrl)
                 }
-                composable("settings") { SettingsScreen(theme, viewModel::setTheme, viewModel::clearCache) }
             }
         }
     }

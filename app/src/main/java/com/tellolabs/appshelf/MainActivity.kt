@@ -48,6 +48,9 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(lifecycle, vm) {
                 lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) { vm.observeDownloads() }
             }
+            LaunchedEffect(lifecycle, vm) {
+                lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) { vm.observeInstallations() }
+            }
             val scope = rememberCoroutineScope()
             var installing by remember { mutableStateOf(false) }
             val permission = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {

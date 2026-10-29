@@ -22,6 +22,8 @@ data class CatalogUiState(
 class AppViewModel(private val container: AppContainer) : ViewModel() {
     private val mutableCatalog = MutableStateFlow(CatalogUiState())
     val catalog = mutableCatalog.asStateFlow()
+    private val mutableInstallations = MutableStateFlow<Map<String, AppInstallation>>(emptyMap())
+    val installations = mutableInstallations.asStateFlow()
     val downloads = container.downloads.items
     val theme = container.settings.theme.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ThemeMode.SYSTEM)
     private val mutableMessage = MutableStateFlow<String?>(null)
@@ -52,6 +54,16 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                         error = "Katalog gagal dimuat. ${e.message ?: "Periksa koneksi internet."}")
                 }
             } finally { refreshing = false }
+        }
+    }
+
+    // Re-read on resume, catalog changes, and package events while foregrounded.
+    suspend fun observeInstallations() {
+        combine(
+            catalog.map { it.snapshot?.catalog?.apps.orEmpty() }.distinctUntilChanged(),
+            container.installations.packageChanges(),
+        ) { apps, _ -> apps }.collectLatest { apps ->
+            mutableInstallations.value = container.installations.check(apps)
         }
     }
 

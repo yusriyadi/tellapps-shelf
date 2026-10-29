@@ -2,6 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- Keep package names in sync with InstallationRepository.queryablePackages. -->
+    <queries>
+        <package android:name="com.tellolabs.localguard" />
+        <package android:name="com.tellolabs.appfin" />
+        <package android:name="id.tellolabs.launcher" />
+    </queries>
     <application
         android:name=".AppShelfApplication"
         android:allowBackup="false"

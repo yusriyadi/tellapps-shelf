@@ -4,6 +4,7 @@ import android.app.Application
 import com.tellolabs.appshelf.data.catalog.CatalogRepository
 import com.tellolabs.appshelf.data.download.DownloadRepository
 import com.tellolabs.appshelf.data.settings.SettingsRepository
+import com.tellolabs.appshelf.data.installation.InstallationRepository
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
@@ -21,6 +22,7 @@ class AppContainer(application: Application) {
         .callTimeout(45, TimeUnit.SECONDS)
         .build()
     val settings = SettingsRepository(application)
+    val installations = InstallationRepository(application)
     val catalog = CatalogRepository(application, http, json)
     val downloads = DownloadRepository(application, settings.store, json)
 }

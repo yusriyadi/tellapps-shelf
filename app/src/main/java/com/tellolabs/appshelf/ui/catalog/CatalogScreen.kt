@@ -9,13 +9,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.tellolabs.appshelf.model.CatalogApp
+import com.tellolabs.appshelf.model.AppInstallation
+import com.tellolabs.appshelf.ui.InstallationLabel
 import com.tellolabs.appshelf.ui.AppIcon
 import com.tellolabs.appshelf.ui.CatalogUiState
 import java.text.DateFormat
 import java.util.Date
 
 @Composable
-fun CatalogScreen(state: CatalogUiState, onRefresh: () -> Unit, onOpen: (String) -> Unit) {
+fun CatalogScreen(state: CatalogUiState, installations: Map<String, AppInstallation>, onRefresh: () -> Unit, onOpen: (String) -> Unit) {
     var search by rememberSaveable { mutableStateOf("") }
     val apps = state.snapshot?.catalog?.apps.orEmpty()
     val filtered = apps.filter { it.name.contains(search, ignoreCase = true) || it.description.orEmpty().contains(search, ignoreCase = true) }
@@ -58,12 +60,12 @@ fun CatalogScreen(state: CatalogUiState, onRefresh: () -> Unit, onOpen: (String)
                 }
             }
         }
-        items(filtered, key = { it.id }) { app -> CatalogCard(app) { onOpen(app.id) } }
+        items(filtered, key = { it.id }) { app -> CatalogCard(app, installations[app.id] ?: AppInstallation()) { onOpen(app.id) } }
     }
 }
 
 @Composable
-private fun CatalogCard(app: CatalogApp, onClick: () -> Unit) {
+private fun CatalogCard(app: CatalogApp, installation: AppInstallation, onClick: () -> Unit) {
     OutlinedCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -73,6 +75,7 @@ private fun CatalogCard(app: CatalogApp, onClick: () -> Unit) {
                     Text(app.releases.firstOrNull()?.label ?: "Belum ada rilis", style = MaterialTheme.typography.bodySmall)
                 }
             }
+            InstallationLabel(installation)
             Text(app.description ?: "Deskripsi belum tersedia", maxLines = 3, overflow = TextOverflow.Ellipsis)
         }
     }

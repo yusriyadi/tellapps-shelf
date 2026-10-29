@@ -10,6 +10,7 @@ Aplikasi katalog Android sederhana untuk app Yusriyadi. Satu modul dengan **Kotl
 ## Fitur
 
 - Katalog, pencarian lokal, detail, repository, dan riwayat rilis sesuai urutan JSON.
+- Status belum terpasang, terpasang, update tersedia, versi perangkat lebih baru, atau tidak diketahui pada katalog dan detail. Perbandingan memakai version code, bukan nama versi.
 - Fallback metadata/icon kosong, refresh manual, cache JSON atomik, waktu sinkronisasi, dan katalog offline terakhir.
 - DownloadManager: antrean, progres, pembatalan, coba lagi, status tersimpan di DataStore, dan pemulihan status saat aplikasi dibuka kembali.
 - File APK disimpan di direktori external app-specific dengan nama UUID. Tidak membutuhkan izin storage luas.
@@ -52,11 +53,11 @@ app/src/main/java/com/tellolabs/appshelf/
 4. Setelah selesai, coba izin sumber install ditolak/diizinkan, kembali dari installer, lalu hapus APK.
 5. Coba URL gagal, file hilang, tema gelap, rotasi, font besar, dan layar tablet.
 
-Build debug berhasil dan fitur serta instalasi sudah diperiksa manual oleh pemilik proyek pada perangkat. Tidak ada unit test atau instrumentation test yang dijalankan pada implementasi awal ini.
+Build debug berhasil dan fitur serta instalasi sudah diperiksa manual oleh pemilik proyek pada perangkat. Pengujian perbandingan version code tersedia pada `AppInstallationTest`. Belum ada instrumentation test.
 
 ## Batasan dan rilis
 
-- APK tunggal/universal. Belum ada split APK/AAB, status terpasang, update otomatis, login, atau notifikasi rilis.
+- APK tunggal/universal. Belum ada split APK/AAB, update otomatis, login, atau notifikasi rilis.
 - Berbagi URL detail website ditunda sampai base URL deployment ditentukan.
 - Release signing memakai keystore khusus rilis, terpisah dari debug key. Simpan cadangan keystore dan kredensial dengan aman; gunakan key yang sama untuk pembaruan berikutnya.
 - APK release tidak dapat menggantikan instalasi debug dengan package yang sama karena signing berbeda. Untuk beralih dari debug, uninstall build debug secara manual lebih dahulu; data lokal dan unduhan app-specific ikut dapat terhapus.
@@ -81,3 +82,13 @@ keyPassword=<password lokal>
 ```
 
 APK bertanda tangan: `app/build/outputs/apk/release/app-release.apk`. Jangan mengunggah keystore atau `keystore.properties` ke repository maupun GitHub Release.
+
+## Status instalasi dan update
+
+Status diperiksa melalui PackageManager pada repository, lalu disalurkan oleh ViewModel ke UI. Pemeriksaan diulang saat Activity RESUMED, katalog berubah, atau ada perubahan paket ketika UI aktif. Kembali dari installer yang dibatalkan tidak dianggap berhasil memasang aplikasi; status dibaca ulang dari perangkat.
+
+Rilis pertama dalam array `releases` dianggap terbaru. Version code lebih tinggi di katalog berarti update tersedia; version code lebih rendah di katalog ditampilkan sebagai versi perangkat lebih baru. Version name hanya untuk tampilan. Kode versi yang tidak tersedia atau tidak valid menghasilkan status tidak diketahui.
+
+Visibilitas paket Android 11+ dibatasi pada LocalGuard (`com.tellolabs.localguard`), AppFin (`com.tellolabs.appfin`), dan Tellauncher (`id.tellolabs.launcher`) melalui `<queries>`. Package aplikasi sendiri otomatis terlihat. Untuk app katalog baru, tambahkan package di manifest **dan** `InstallationRepository.queryablePackages`. Jika sebuah package tidak ditemukan dan visibilitasnya belum dijamin, status tetap tidak diketahui. Tidak menggunakan izin `QUERY_ALL_PACKAGES`.
+
+Download tetap tersedia untuk mengambil ulang APK maupun rilis lama. Hanya rilis terbaru yang lebih tinggi dari versi terpasang diberi label tombol Download update; riwayat rilis tidak dipromosikan sebagai update. Status instalasi tidak mengubah status file di Unduhan. Update tetap memerlukan signing yang cocok dan konfirmasi installer Android.

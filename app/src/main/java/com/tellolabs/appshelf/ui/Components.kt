@@ -66,3 +66,13 @@ fun formatBytes(bytes: Long): String = when {
     bytes < 1024 * 1024 -> "${bytes / 1024} KB"
     else -> "%.1f MB".format(bytes.toDouble() / (1024 * 1024))
 }
+
+@Composable
+fun InstallationLabel(installation: AppInstallation) {
+    Text(
+        text = installation.status.label,
+        style = MaterialTheme.typography.labelLarge,
+        color = if (installation.status == InstallationStatus.UPDATE_AVAILABLE)
+            MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
