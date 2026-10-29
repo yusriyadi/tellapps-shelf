@@ -29,6 +29,7 @@ fun AppNavigation(viewModel: AppViewModel, onInstall: (DownloadRecord) -> Unit, 
     val catalog by viewModel.catalog.collectAsStateWithLifecycle()
     val installations by viewModel.installations.collectAsStateWithLifecycle()
     val downloads by viewModel.downloads.collectAsStateWithLifecycle()
+    val selfUpdate by viewModel.selfUpdate.collectAsStateWithLifecycle()
     val theme by viewModel.theme.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
     val snackbars = remember { SnackbarHostState() }
@@ -54,7 +55,6 @@ fun AppNavigation(viewModel: AppViewModel, onInstall: (DownloadRecord) -> Unit, 
                     icon = { Text("↓") }, onClick = {
                         nav.navigate("downloads") { popUpTo("catalog") { saveState = true }; launchSingleTop = true; restoreState = true }
                     })
-                composable("settings") { SettingsScreen(theme, viewModel::setTheme, viewModel::clearCache) }
             }
         },
         snackbarHost = { SnackbarHost(snackbars) },
@@ -71,6 +71,11 @@ fun AppNavigation(viewModel: AppViewModel, onInstall: (DownloadRecord) -> Unit, 
                     val app = catalog.snapshot?.catalog?.apps?.firstOrNull { it.id == detail.arguments?.getString("id") }
                     DetailScreen(app, installations[app?.id] ?: AppInstallation(), downloads, onDownload = { release -> app?.let { viewModel.download(it, release) } },
                         onInstall = onInstall, onCancel = viewModel::cancel, onRetry = viewModel::retry, onRepository = onOpenUrl, onOpenApp = onOpenApp)
+                }
+                composable("settings") {
+                    SettingsScreen(theme, viewModel::setTheme, viewModel::clearCache,
+                        update = selfUpdate, onCheckUpdate = viewModel::refresh,
+                        onOpenUpdate = { id -> nav.navigate("detail/${Uri.encode(id)}") })
                 }
             }
         }

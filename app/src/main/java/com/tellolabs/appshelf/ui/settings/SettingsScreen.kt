@@ -11,9 +11,18 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.tellolabs.appshelf.data.catalog.CATALOG_URL
 import com.tellolabs.appshelf.data.settings.ThemeMode
+import com.tellolabs.appshelf.model.InstallationStatus
+import com.tellolabs.appshelf.ui.SelfUpdateUiState
 
 @Composable
-fun SettingsScreen(mode: ThemeMode, onTheme: (ThemeMode) -> Unit, onClearCache: () -> Unit) {
+fun SettingsScreen(
+    mode: ThemeMode,
+    onTheme: (ThemeMode) -> Unit,
+    onClearCache: () -> Unit,
+    update: SelfUpdateUiState,
+    onCheckUpdate: () -> Unit,
+    onOpenUpdate: (String) -> Unit,
+) {
     var confirm by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("Tema", style = MaterialTheme.typography.titleLarge)
@@ -29,10 +38,46 @@ fun SettingsScreen(mode: ThemeMode, onTheme: (ThemeMode) -> Unit, onClearCache: 
         Text("APK diunduh dari URL rilis pada katalog. TellApps Shelf tidak memasang APK secara otomatis.")
         OutlinedButton(onClick = { confirm = true }) { Text("Bersihkan cache katalog") }
         Text("Pembersihan cache tidak menghapus APK. Kelola file APK dari halaman Unduhan.", style = MaterialTheme.typography.bodySmall)
-        Text("TellApps Shelf 0.1.0", style = MaterialTheme.typography.labelLarge)
+        HorizontalDivider()
+        SelfUpdateSection(update, onCheckUpdate, onOpenUpdate)
     }
     if (confirm) AlertDialog(onDismissRequest = { confirm = false }, title = { Text("Bersihkan cache katalog?") },
         text = { Text("Katalog offline akan tersedia lagi setelah refresh berikutnya berhasil.") },
         confirmButton = { TextButton(onClick = { onClearCache(); confirm = false }) { Text("Bersihkan") } },
         dismissButton = { TextButton(onClick = { confirm = false }) { Text("Batal") } })
+}
+
+@Composable
+private fun SelfUpdateSection(update: SelfUpdateUiState, onCheckUpdate: () -> Unit, onOpenUpdate: (String) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Update TellApps Shelf", style = MaterialTheme.typography.titleLarge)
+        Text("Versi terpasang: ${update.versionName}${if (update.isDebug) " (debug)" else ""}")
+        if (update.loading) {
+            LinearProgressIndicator(Modifier.fillMaxWidth())
+            Text("Memeriksa katalog…")
+        } else {
+            Text(when (update.status) {
+                InstallationStatus.UPDATE_AVAILABLE -> "Update tersedia: ${update.app?.releases?.firstOrNull()?.label}"
+                InstallationStatus.INSTALLED -> "Versi terpasang sudah sama dengan versi terbaru di katalog."
+                InstallationStatus.NEWER_INSTALLED -> "Versi perangkat lebih baru daripada versi di katalog."
+                else -> when {
+                    update.app == null -> "TellApps Shelf belum ditemukan dalam katalog."
+                    update.app.releases.isEmpty() -> "Rilis TellApps Shelf belum tersedia di katalog."
+                    else -> "Nomor versi katalog belum cukup untuk memeriksa update."
+                }
+            })
+        }
+        if (update.fromCache) Text("Berdasarkan katalog tersimpan.", style = MaterialTheme.typography.bodySmall)
+        update.error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+        OutlinedButton(onClick = onCheckUpdate, enabled = !update.loading) { Text("Cek update") }
+        if (!update.loading && update.status == InstallationStatus.UPDATE_AVAILABLE) {
+            update.app?.let { app ->
+                Button(onClick = { onOpenUpdate(app.id) }) { Text("Lihat update") }
+            }
+            Text("Download dan instalasi dilanjutkan dari detail rilis, lalu dikonfirmasi melalui installer Android.",
+                style = MaterialTheme.typography.bodySmall)
+            if (update.isDebug) Text("Build debug memerlukan APK pembaruan dengan signing yang sama.",
+                style = MaterialTheme.typography.bodySmall)
+        }
+    }
 }

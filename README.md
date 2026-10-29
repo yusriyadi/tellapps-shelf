@@ -10,6 +10,7 @@ Aplikasi katalog Android sederhana untuk app Yusriyadi. Satu modul dengan **Kotl
 ## Fitur
 
 - Katalog, pencarian lokal, detail, repository, dan riwayat rilis sesuai urutan JSON.
+- Cek update TellApps Shelf dari Pengaturan berdasarkan package name dan version code; buka detail rilis untuk download/install melalui alur yang sudah ada. Versi terpasang memakai konfigurasi build, bukan teks versi manual.
 - Tombol Buka aplikasi pada detail untuk aplikasi terpasang yang memiliki launcher activity yang dapat diakses.
 - Status belum terpasang, terpasang, update tersedia, versi perangkat lebih baru, atau tidak diketahui pada katalog dan detail. Perbandingan memakai version code, bukan nama versi.
 - Fallback metadata/icon kosong, refresh manual, cache JSON atomik, waktu sinkronisasi, dan katalog offline terakhir.
@@ -95,3 +96,9 @@ Visibilitas paket Android 11+ dibatasi pada LocalGuard (`com.tellolabs.localguar
 Download tetap tersedia untuk mengambil ulang APK maupun rilis lama. Hanya rilis terbaru yang lebih tinggi dari versi terpasang diberi label tombol Download update; riwayat rilis tidak dipromosikan sebagai update. Status instalasi tidak mengubah status file di Unduhan. Update tetap memerlukan signing yang cocok dan konfirmasi installer Android.
 
 Tombol **Buka aplikasi** muncul di detail bila PackageManager menyediakan launch intent. Saat tombol diketuk, Activity mencari intent terbaru dan membuka aplikasi tersebut. Jika app telah dihapus atau aksesnya ditolak, pengguna mendapat pesan dan Shelf tetap terbuka. Aplikasi tanpa launcher activity tidak mendapat tombol Buka; pemeriksaan ini tidak bergantung pada ketersediaan version code katalog.
+
+## Pembaruan TellApps Shelf
+
+Buka **Pengaturan → Update TellApps Shelf → Cek update**. Metadata aplikasi sendiri dicari berdasarkan `packageName` yang sama dengan application ID, bukan ID atau nama tampilan katalog. Jika version code rilis pertama lebih tinggi daripada build terpasang, tombol **Lihat update** membuka detail rilis untuk download dan install. Tidak ada pengunduhan atau instalasi otomatis.
+
+Pemeriksaan memakai refresh katalog yang sama dengan halaman Katalog. Jika jaringan gagal, data lama tetap terlihat dengan pesan error dan penanda katalog tersimpan; hasil ini bukan konfirmasi bahwa server sudah diperiksa. Jika metadata aplikasi sendiri atau version code belum tersedia, status tidak disimpulkan sebagai versi terbaru. APK update harus memakai signing key yang sama dengan aplikasi terpasang; debug dan release memakai key berbeda.

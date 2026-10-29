@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.tellolabs.appshelf.AppContainer
+import com.tellolabs.appshelf.BuildConfig
 import com.tellolabs.appshelf.data.catalog.CatalogSnapshot
 import com.tellolabs.appshelf.data.settings.ThemeMode
 import com.tellolabs.appshelf.model.*
@@ -19,11 +20,32 @@ data class CatalogUiState(
     val error: String? = null,
 )
 
+data class SelfUpdateUiState(
+    val versionName: String = BuildConfig.VERSION_NAME,
+    val isDebug: Boolean = BuildConfig.DEBUG,
+    val app: CatalogApp? = null,
+    val status: InstallationStatus = InstallationStatus.UNKNOWN,
+    val loading: Boolean = true,
+    val fromCache: Boolean = false,
+    val error: String? = null,
+)
+
 class AppViewModel(private val container: AppContainer) : ViewModel() {
     private val mutableCatalog = MutableStateFlow(CatalogUiState())
     val catalog = mutableCatalog.asStateFlow()
     private val mutableInstallations = MutableStateFlow<Map<String, AppInstallation>>(emptyMap())
     val installations = mutableInstallations.asStateFlow()
+    val selfUpdate = catalog.map { state ->
+        // Match package identity; the catalog entry's ID or display name may change.
+        val app = state.snapshot?.catalog?.apps?.firstOrNull { it.packageName == BuildConfig.APPLICATION_ID }
+        SelfUpdateUiState(
+            app = app,
+            status = compareInstalledVersion(BuildConfig.VERSION_CODE.toLong(), app?.releases?.firstOrNull()?.versionCode),
+            loading = state.loading,
+            fromCache = state.fromCache,
+            error = state.error,
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SelfUpdateUiState())
     val downloads = container.downloads.items
     val theme = container.settings.theme.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ThemeMode.SYSTEM)
     private val mutableMessage = MutableStateFlow<String?>(null)
