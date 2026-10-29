@@ -65,7 +65,8 @@ fun AppNavigation(viewModel: AppViewModel, onInstall: (DownloadRecord) -> Unit, 
                     CatalogScreen(catalog, installations, viewModel::refresh) { nav.navigate("detail/${Uri.encode(it)}") }
                 }
                 composable("downloads") {
-                    DownloadsScreen(downloads, onInstall, viewModel::cancel, viewModel::retry, viewModel::delete)
+                    DownloadsScreen(downloads, catalog.snapshot?.catalog?.apps.orEmpty(), onInstall,
+                        viewModel::cancel, viewModel::retry, viewModel::delete, viewModel::cleanOldDownloads)
                 }
                 composable("detail/{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })) { detail ->
                     val app = catalog.snapshot?.catalog?.apps?.firstOrNull { it.id == detail.arguments?.getString("id") }

@@ -66,7 +66,7 @@ class DownloadRepository(
                 publish(all)
                 return@withLock
             }
-            start(all, existing, app.id, app.name, release.label, requireNotNull(release.apkUrl), release.sha256)
+            start(all, existing, app.id, app.name, release.label, requireNotNull(release.apkUrl), release.sha256, release.versionCode, app.packageName)
         }
     }
 
@@ -75,11 +75,11 @@ class DownloadRepository(
             val all = records()
             val current = all.firstOrNull { it.key == record.key } ?: return@withLock
             if (query(current).let { it.active || it.status == DownloadStatus.READY }) return@withLock
-            start(all, current, current.appId, current.appName, current.versionLabel, current.url, current.sha256)
+            start(all, current, current.appId, current.appName, current.versionLabel, current.url, current.sha256, current.versionCode, current.packageName)
         }
     }
 
-    private suspend fun start(all: List<DownloadRecord>, old: DownloadRecord?, appId: String, name: String, version: String, url: String, sha: String?) {
+    private suspend fun start(all: List<DownloadRecord>, old: DownloadRecord?, appId: String, name: String, version: String, url: String, sha: String?, versionCode: Long?, packageName: String?) {
         require(url.isHttpsUrl()) { "URL APK HTTPS tidak valid" }
         val nameOnDisk = "${UUID.randomUUID()}.apk"
         val destination = File(directory(), nameOnDisk)
@@ -90,7 +90,7 @@ class DownloadRepository(
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
             .setDestinationUri(Uri.fromFile(destination))
         val id = manager.enqueue(request)
-        val next = DownloadRecord(old?.key ?: UUID.randomUUID().toString(), id, appId, name, version, url, nameOnDisk, sha)
+        val next = DownloadRecord(old?.key ?: UUID.randomUUID().toString(), id, appId, name, version, url, nameOnDisk, sha, versionCode = versionCode, packageName = packageName)
         val updated = all.filterNot { it.key == old?.key } + next
         try {
             save(updated)
@@ -128,6 +128,34 @@ class DownloadRepository(
             save(updated)
             verified.remove(record.key)
             publish(updated)
+        }
+    }
+
+    suspend fun deleteOld(confirmed: List<DownloadRecord>, apps: List<CatalogApp>): Int = withContext(Dispatchers.IO) {
+        mutex.withLock {
+            val all = records()
+            val approved = confirmed.associateBy { it.key }
+            val catalog = apps.associateBy { it.id }
+            val removed = mutableSetOf<String>()
+            var failed = 0
+            all.forEach { record ->
+                // A retry may reuse the key but point at a new transfer. Never
+                // delete a replacement download the user did not confirm.
+                if (approved[record.key]?.managerId == record.managerId && query(record).canCleanOld(catalog[record.appId])) {
+                    try {
+                        manager.remove(record.managerId)
+                        val apk = file(record)
+                        check(!apk.exists() || apk.delete()) { "File tidak dapat dihapus" }
+                        removed += record.key
+                        verified.remove(record.key)
+                    } catch (_: RuntimeException) { failed++ }
+                }
+            }
+            val updated = all.filterNot { it.key in removed }
+            save(updated)
+            publish(updated)
+            check(failed == 0) { "${removed.size} APK lama dihapus; $failed file gagal dihapus. Silakan coba lagi." }
+            removed.size
         }
     }
 

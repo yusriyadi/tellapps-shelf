@@ -47,6 +47,8 @@ data class DownloadRecord(
     val fileName: String,
     val sha256: String? = null,
     val cancelled: Boolean = false,
+    val versionCode: Long? = null,
+    val packageName: String? = null,
 )
 
 enum class DownloadStatus(val label: String) {

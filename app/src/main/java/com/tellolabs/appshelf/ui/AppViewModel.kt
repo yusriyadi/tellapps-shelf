@@ -103,6 +103,11 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     fun retry(record: DownloadRecord) = action { container.downloads.retry(record) }
     fun cancel(record: DownloadRecord) = action { container.downloads.cancel(record) }
     fun delete(record: DownloadRecord) = action { container.downloads.delete(record) }
+    fun cleanOldDownloads(confirmed: List<DownloadRecord>) = action {
+        val apps = catalog.value.snapshot?.catalog?.apps.orEmpty()
+        val count = container.downloads.deleteOld(confirmed, apps)
+        mutableMessage.value = if (count > 0) "$count APK lama dihapus." else "Tidak ada APK lama yang dapat dibersihkan."
+    }
     fun setTheme(mode: ThemeMode) = action { container.settings.setTheme(mode) }
     fun clearCache() = action {
         container.catalog.clearCache()

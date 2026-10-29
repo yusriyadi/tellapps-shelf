@@ -10,6 +10,7 @@ Aplikasi katalog Android sederhana untuk app Yusriyadi. Satu modul dengan **Kotl
 ## Fitur
 
 - Katalog, pencarian lokal, detail, repository, dan riwayat rilis sesuai urutan JSON.
+- APK versi lama ditandai di Unduhan dan dapat dibersihkan sekaligus setelah konfirmasi. Unduhan aktif dan versi terbaru dilindungi dari pembersihan massal.
 - Tanggal rilis ditampilkan lebih mudah dibaca, ukuran APK menggunakan metadata atau informasi unduhan, dan changelog terbaru diberi penekanan.
 - Cek update TellApps Shelf dari Pengaturan berdasarkan package name dan version code; buka detail rilis untuk download/install melalui alur yang sudah ada. Versi terpasang memakai konfigurasi build, bukan teks versi manual.
 - Tombol Buka aplikasi pada detail untuk aplikasi terpasang yang memiliki launcher activity yang dapat diakses.
@@ -103,3 +104,9 @@ Tombol **Buka aplikasi** muncul di detail bila PackageManager menyediakan launch
 Buka **Pengaturan → Update TellApps Shelf → Cek update**. Metadata aplikasi sendiri dicari berdasarkan `packageName` yang sama dengan application ID, bukan ID atau nama tampilan katalog. Jika version code rilis pertama lebih tinggi daripada build terpasang, tombol **Lihat update** membuka detail rilis untuk download dan install. Tidak ada pengunduhan atau instalasi otomatis.
 
 Pemeriksaan memakai refresh katalog yang sama dengan halaman Katalog. Jika jaringan gagal, data lama tetap terlihat dengan pesan error dan penanda katalog tersimpan; hasil ini bukan konfirmasi bahwa server sudah diperiksa. Jika metadata aplikasi sendiri atau version code belum tersedia, status tidak disimpulkan sebagai versi terbaru. APK update harus memakai signing key yang sama dengan aplikasi terpasang; debug dan release memakai key berbeda.
+
+## APK lama
+
+Download baru menyimpan snapshot version code dan package name; metadata unduhan lama tetap dapat dibaca tanpa migrasi manual. Penentuan versi lama memakai version code, atau posisi URL pada riwayat rilis untuk unduhan lama yang belum punya snapshot. URL yang hilang dari katalog tanpa version code yang bisa dibandingkan tidak dianggap versi lama. Version code lebih baru di perangkat/unduhan tidak dianggap sampah.
+
+**Unduhan → Bersihkan APK lama** meminta konfirmasi sebelum menghapus file yang telah selesai dan teridentifikasi sebagai versi lama. Repository memeriksa status serta download ID lagi sebelum penghapusan, sehingga retry atau unduhan yang masih aktif tidak ikut terhapus. Tidak ada pembersihan otomatis dan tidak ada aplikasi terpasang yang di-uninstall.
