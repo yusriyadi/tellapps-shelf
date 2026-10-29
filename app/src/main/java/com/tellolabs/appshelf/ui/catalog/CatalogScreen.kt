@@ -2,6 +2,7 @@ package com.tellolabs.appshelf.ui.catalog
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -33,6 +34,7 @@ fun CatalogScreen(state: CatalogUiState, installations: Map<String, AppInstallat
         item(span = { GridItemSpan(maxLineSpan) }) {
             OutlinedTextField(value = search, onValueChange = { search = it },
                 label = { Text("Cari aplikasi") }, singleLine = true, modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(28.dp),
                 trailingIcon = { if (search.isNotEmpty()) TextButton(onClick = { search = "" }) { Text("Reset") } })
         }
         item(span = { GridItemSpan(maxLineSpan) }) {
