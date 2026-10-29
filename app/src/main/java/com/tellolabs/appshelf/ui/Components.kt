@@ -1,5 +1,6 @@
 package com.tellolabs.appshelf.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,16 +11,37 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.painterResource
+import com.tellolabs.appshelf.R
+import com.tellolabs.appshelf.BuildConfig
 import coil3.compose.SubcomposeAsyncImage
 import com.tellolabs.appshelf.model.*
 
 @Composable
 fun AppIcon(app: CatalogApp) {
     val modifier = Modifier.size(56.dp).clip(RoundedCornerShape(14.dp))
+    val knownIcon = when (app.packageName) {
+        "com.tellolabs.localguard" -> R.drawable.ic_catalog_localguard
+        "com.tellolabs.appfin" -> R.drawable.ic_catalog_appfin
+        "id.tellolabs.launcher" -> R.drawable.ic_catalog_tellauncher
+        BuildConfig.APPLICATION_ID -> R.drawable.ic_catalog_shelf
+        null -> when (app.id) {
+            "localguard" -> R.drawable.ic_catalog_localguard
+            "appfin" -> R.drawable.ic_catalog_appfin
+            "tellauncher" -> R.drawable.ic_catalog_tellauncher
+            "tellapps-shelf" -> R.drawable.ic_catalog_shelf
+            else -> null
+        }
+        else -> null
+    }
     val fallback: @Composable () -> Unit = {
-        Box(modifier.background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
-            Text(app.name.take(1).uppercase(), style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onPrimaryContainer)
+        if (knownIcon != null) {
+            Image(painterResource(knownIcon), contentDescription = null, modifier = modifier, contentScale = ContentScale.Crop)
+        } else {
+            Box(modifier.background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
+                Text(app.name.take(1).uppercase(), style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer)
+            }
         }
     }
     if (app.iconUrl.isHttpsUrl()) {

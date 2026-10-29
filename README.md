@@ -10,8 +10,6 @@ Aplikasi katalog Android sederhana untuk app Yusriyadi. Satu modul dengan **Kotl
 ## Fitur
 
 - Katalog, pencarian lokal, detail, repository, dan riwayat rilis sesuai urutan JSON.
-- APK versi lama ditandai di Unduhan dan dapat dibersihkan sekaligus setelah konfirmasi. Unduhan aktif dan versi terbaru dilindungi dari pembersihan massal.
-- Tanggal rilis ditampilkan lebih mudah dibaca, ukuran APK menggunakan metadata atau informasi unduhan, dan changelog terbaru diberi penekanan.
 - Cek update TellApps Shelf dari Pengaturan berdasarkan package name dan version code; buka detail rilis untuk download/install melalui alur yang sudah ada. Versi terpasang memakai konfigurasi build, bukan teks versi manual.
 - Tombol Buka aplikasi pada detail untuk aplikasi terpasang yang memiliki launcher activity yang dapat diakses.
 - Status belum terpasang, terpasang, update tersedia, versi perangkat lebih baru, atau tidak diketahui pada katalog dan detail. Perbandingan memakai version code, bukan nama versi.
@@ -19,6 +17,9 @@ Aplikasi katalog Android sederhana untuk app Yusriyadi. Satu modul dengan **Kotl
 - DownloadManager: antrean, progres, pembatalan, coba lagi, status tersimpan di DataStore, dan pemulihan status saat aplikasi dibuka kembali.
 - File APK disimpan di direktori external app-specific dengan nama UUID. Tidak membutuhkan izin storage luas.
 - Install melalui FileProvider dan installer Android, setelah pengguna memberikan izin sumber instalasi. Setelah kembali dari pengaturan, ketuk Install APK lagi. Membatalkan installer tidak menghapus APK atau mengubahnya menjadi status terpasang.
+- APK versi lama ditandai di Unduhan dan dapat dibersihkan sekaligus setelah konfirmasi. Unduhan aktif dan versi terbaru dilindungi dari pembersihan massal.
+- Tanggal rilis ditampilkan lebih mudah dibaca, ukuran APK menggunakan metadata atau informasi unduhan, dan changelog terbaru diberi penekanan.
+- Ikon asli LocalGuard, AppFin, dan Tellauncher tersedia sebagai fallback lokal; ikon TellApps Shelf memakai ilustrasi rak aplikasi. `iconUrl` HTTPS tetap diutamakan bila tersedia.
 - Unduhan siap install dapat dihapus. Checksum SHA-256 diperiksa bila tersedia dalam katalog; checksum berbeda memblokir install.
 - Tema sistem/terang/gelap, pembersihan cache katalog, grid katalog pada layar lebar, dan konten detail dengan lebar terbatas.
 
@@ -105,8 +106,10 @@ Buka **Pengaturan → Update TellApps Shelf → Cek update**. Metadata aplikasi 
 
 Pemeriksaan memakai refresh katalog yang sama dengan halaman Katalog. Jika jaringan gagal, data lama tetap terlihat dengan pesan error dan penanda katalog tersimpan; hasil ini bukan konfirmasi bahwa server sudah diperiksa. Jika metadata aplikasi sendiri atau version code belum tersedia, status tidak disimpulkan sebagai versi terbaru. APK update harus memakai signing key yang sama dengan aplikasi terpasang; debug dan release memakai key berbeda.
 
-## APK lama
+## APK lama dan aset ikon
 
 Download baru menyimpan snapshot version code dan package name; metadata unduhan lama tetap dapat dibaca tanpa migrasi manual. Penentuan versi lama memakai version code, atau posisi URL pada riwayat rilis untuk unduhan lama yang belum punya snapshot. URL yang hilang dari katalog tanpa version code yang bisa dibandingkan tidak dianggap versi lama. Version code lebih baru di perangkat/unduhan tidak dianggap sampah.
 
 **Unduhan → Bersihkan APK lama** meminta konfirmasi sebelum menghapus file yang telah selesai dan teridentifikasi sebagai versi lama. Repository memeriksa status serta download ID lagi sebelum penghapusan, sehingga retry atau unduhan yang masih aktif tidak ikut terhapus. Tidak ada pembersihan otomatis dan tidak ada aplikasi terpasang yang di-uninstall.
+
+Aset ikon katalog disalin dari drawable asli proyek LocalGuard, AppFin, dan Tellauncher milik pemilik proyek. Aset disertakan dalam APK agar tetap tampil offline saat `iconUrl` kosong atau gagal dimuat; aplikasi katalog lainnya tetap memakai inisial. Katalog publik tidak diubah dalam pekerjaan ini. Ikon launcher TellApps Shelf memakai vector/adaptive icon yang sama dengan identitas di katalog.
